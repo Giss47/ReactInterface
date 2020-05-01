@@ -10,7 +10,8 @@ class  App extends Component {
   constructor() {
     super();
     this.state = {
-      myAppointments: []
+      myAppointments: [],
+      lastIndex: 0
     }
   }
 
@@ -19,6 +20,8 @@ class  App extends Component {
       .then(response => response.json())
       .then(resutl => {
         const apts = resutl.map(item => {
+          item.aptId = this.state.lastIndex;
+          this.setState({lastIndex: this.state.lastIndex + 1})
           return item;
         });
 
@@ -38,7 +41,7 @@ class  App extends Component {
               <div className="container">
                 <AddAppointments/>
                 <SearchAppointments/>
-                <ListAppointments/>
+                <ListAppointments appointments={this.state.myAppointments}/>
               </div>
             </div>
           </div>
