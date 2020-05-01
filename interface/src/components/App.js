@@ -5,6 +5,8 @@ import AddAppointments from './AddApointments';
 import SearchAppointments from './SearchAppointments';
 import ListAppointments from './ListAppointments';
 
+import  { without }  from 'lodash';
+
 class  App extends Component {
 
   constructor() {
@@ -12,9 +14,15 @@ class  App extends Component {
     this.state = {
       myAppointments: [],
       lastIndex: 0
-    }
+    };
+    this.deletAppointment = this.deletAppointment.bind(this);
   }
 
+  deletAppointment(apt){
+    let tempApts = this.state.myAppointments;
+    tempApts = without(tempApts, apt);
+    this.setState({myAppointments: tempApts})
+  }
   componentDidMount() {
     fetch('./data.json')
       .then(response => response.json())
@@ -41,7 +49,8 @@ class  App extends Component {
               <div className="container">
                 <AddAppointments/>
                 <SearchAppointments/>
-                <ListAppointments appointments={this.state.myAppointments}/>
+                <ListAppointments appointments={this.state.myAppointments}
+                  deletAppointment={this.deletAppointment}/>
               </div>
             </div>
           </div>
