@@ -1,40 +1,58 @@
-import React, { Component } from 'react';
-import '../css/App.css';
+import React, { Component } from "react";
+import "../css/App.css";
 
-import AddAppointments from './AddApointments';
-import SearchAppointments from './SearchAppointments';
-import ListAppointments from './ListAppointments';
+import AddAppointments from "./AddApointments";
+import SearchAppointments from "./SearchAppointments";
+import ListAppointments from "./ListAppointments";
 
-import  { without }  from 'lodash';
+import { findIndex, without } from "lodash";
 
-class  App extends Component {
-
+class App extends Component {
   constructor() {
     super();
     this.state = {
       myAppointments: [],
       lastIndex: 0,
-      formDispaly : true,
-      orderBy: 'petName',
-      orderDir: 'asc'
+      formDispaly: true,
+      orderBy: "petName",
+      orderDir: "asc",
+      queryText: "",
     };
     this.deletAppointment = this.deletAppointment.bind(this);
     this.toggleForm = this.toggleForm.bind(this);
     this.addAppointment = this.addAppointment.bind(this);
     this.changeOrder = this.changeOrder.bind(this);
+    this.searchApts = this.searchApts.bind(this);
+    this.updateInfo = this.updateInfo.bind(this);
   }
 
-  toggleForm(){
+  toggleForm() {
     this.setState({
-      formDispaly: !this.state.formDispaly
+      formDispaly: !this.state.formDispaly,
     });
   }
 
+  searchApts(queryText) {
+    this.setState({
+      queryText: queryText,
+    });
+  }
   changeOrder(order, dir) {
     this.setState({
       orderBy: order,
-      orderDir: dir 
-    })
+      orderDir: dir,
+    });
+  }
+
+  updateInfo(name, value, id) {
+    let tempApts = this.state.myAppointments;
+    let aptIndex = findIndex(this.state.myAppointments, {
+      aptId: id,
+    });
+    tempApts[aptIndex][name] = value;
+    this.setState({
+      myAppointments: tempApts,
+    });
   }
 
   addAppointment(apt) {
@@ -43,52 +61,65 @@ class  App extends Component {
     temApts.unshift(apt);
     this.setState({
       myAppointments: temApts,
-      lastIndex: this.state.lastIndex + 1
-    })
+      lastIndex: this.state.lastIndex + 1,
+    });
   }
 
-  deletAppointment(apt){
+  deletAppointment(apt) {
     let tempApts = this.state.myAppointments;
     tempApts = without(tempApts, apt);
-    this.setState({myAppointments: tempApts})
+    this.setState({ myAppointments: tempApts });
   }
   componentDidMount() {
-    fetch('./data.json')
-      .then(response => response.json())
-      .then(resutl => {
-        const apts = resutl.map(item => {
+    fetch("./data.json")
+      .then((response) => response.json())
+      .then((resutl) => {
+        const apts = resutl.map((item) => {
           item.aptId = this.state.lastIndex;
-          this.setState({lastIndex: this.state.lastIndex + 1})
+          this.setState({ lastIndex: this.state.lastIndex + 1 });
           return item;
         });
 
         this.setState({
-          myAppointments: apts
+          myAppointments: apts,
         });
-
       });
   }
 
   render() {
-
     let order;
     let filteredApts = this.state.myAppointments;
 
-    if(this.state.orderDir === 'asc') {
+    if (this.state.orderDir === "asc") {
       order = 1;
     } else {
       order = -1;
     }
 
-    filteredApts.sort((a,b) => {
-      if(a[this.state.orderBy].toLowerCase() < b[this.state.orderBy].toLowerCase())
-      {
-        return -1 * order;
-      }  else {
-        return 1 * order;
-      }
-    });
-
+    filteredApts = filteredApts
+      .sort((a, b) => {
+        if (
+          a[this.state.orderBy].toLowerCase() <
+          b[this.state.orderBy].toLowerCase()
+        ) {
+          return -1 * order;
+        } else {
+          return 1 * order;
+        }
+      })
+      .filter((eachItem) => {
+        return (
+          eachItem["petName"]
+            .toLowerCase()
+            .includes(this.state.queryText.toLowerCase()) ||
+          eachItem["ownerName"]
+            .toLowerCase()
+            .includes(this.state.queryText.toLowerCase()) ||
+          eachItem["aptNotes"]
+            .toLowerCase()
+            .includes(this.state.queryText.toLowerCase())
+        );
+      });
 
     return (
       <main className="page bg-white" id="petratings">
@@ -100,22 +131,26 @@ class  App extends Component {
                   formDispaly={this.state.formDispaly}
                   toggleForm={this.toggleForm}
                   addAppointment={this.addAppointment}
-                 />
-                <SearchAppointments
-                orderBy={this.state.orderBy}
-                orderDir={this.state.orderDir}
-                changeOrder={this.changeOrder}
                 />
-                <ListAppointments 
+                <SearchAppointments
+                  orderBy={this.state.orderBy}
+                  orderDir={this.state.orderDir}
+                  changeOrder={this.changeOrder}
+                  searchApts={this.searchApts}
+                />
+                <ListAppointments
                   appointments={filteredApts}
-                  deletAppointment={this.deletAppointment}/>
+                  deletAppointment={this.deletAppointment}
+                  updateInfo={this.updateInfo}
+                />
+                
               </div>
             </div>
           </div>
         </div>
       </main>
     );
-    }
   }
-  
-  export default App;
+}
+
+export default App;
